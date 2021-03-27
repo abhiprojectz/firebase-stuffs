@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<link rel="stylesheet" type="text/css" href="style.css">
+	 <script type="text/javascript" src="sweetalert2.js"></script>
+      <script src="https://www.gstatic.com/firebasejs/8.3.1/firebase.js"></script>
+      <script src="https://www.gstatic.com/firebasejs/8.3.1/firebase-app.js"></script>
+      <script src="https://www.gstatic.com/firebasejs/8.3.1/firebase-analytics.js"></script>
+      <script src="https://www.gstatic.com/firebasejs/8.3.1/firebase-auth.js"></script>
+      <script src="https://www.gstatic.com/firebasejs/8.3.1/firebase-database.js"></script>
+</head>
+<body>
+
+	<h1 id="status"></h1>
+<div class="container" id="con"></div>
+
+
+</body>
+<script type="text/javascript" src="config.js"></script>
+<script type="text/javascript">
+	var database = firebase.database();
+	var con = document.querySelector("#con");
+
+	var url = new URL(window.location.href);
+    var id = url.searchParams.get('id');
+
+
+
+	database.ref('/teqno/admin' + id).once("value", (snapshot) => {
+		// console.log(snapshot.val())
+		var tree = snapshot.val();
+		var el = Object.keys(tree);
+		console.log(el);
+		var flag,color;
+		var status = "unlocked";
+
+
+
+
+		el.forEach((elem) => {
+			var keyref = database.ref('/teqno/admin' + id + "/").child(elem);
+			console.log(keyref);
+
+		
+
+			keyref.once("value", (snap) => {
+				flag = snap.val().lock;
+				console.log(flag);
+			});
+
+
+			if (flag) {
+				color = "red";
+				status = "locked";
+			} else {
+				color = "green";
+				status = "unlocked";
+			}
+
+
+			var format = `
+			<div id="${elem}-${status}" style="background-color:${color};" onclick="task(this.id)" class="item z">${elem}  <br><br> <span> Screen is  ${status}! </span></div>
+			`;
+			con.innerHTML += format;
+		})
+	})
+
+	function task(x) {
+		console.log(x);
+		var data;
+
+		// extracting the unlocking status
+		var change = x.split('-')[1];
+
+		// extracting admin id 
+		var screenid = x.split('-')[0];
+
+
+
+		if (change === "unlocked") {
+			data = "true";
+		} else {
+			data = "false";
+		}
+
+		// reading data
+		var keyref = database.ref('/teqno/admin' + id + "/").child(screenid);
+		keyref.set({
+			lock: data
+		}, (err) => {
+			if (err) {
+				console.log(err);
+			} else {
+				console.log("updated!")
+			}
+		})
+	}
+
+</script>
+</html>
